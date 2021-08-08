@@ -1,0 +1,16 @@
+----
+-- The following is some basic syntax of brsh
+```
+func(
+  printf(
+    brSH!
+  ) # acts as heredocs by default
+  (var) = 1 # sets (var) as 1
+  printf((var)) # outputs (var)/1
+  (1=1) # exits 0 (true)
+  (
+    # something something
+  ) # code block
+)
+```
+----
