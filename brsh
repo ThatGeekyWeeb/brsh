@@ -1,0 +1,57 @@
+#!/bin/sh
+usage(){
+  printf 'brSH: hellish rewrite of SH in pureSH!
+  usage: 
+    ./brsh <>.brsh # run a brsh script
+    <> | ./brsh - # read STDIN as a brsh script
+    ./brsh -h # outputs this silly
+'
+}
+pparse(){
+  if [ "$1" = "printf(" ]; then 
+    line="${1}"; wait="1" # waits for the closing )
+  elif [ "$1" != ")" -a "$wait" ] && [ ! "$ln" ]; then
+    line="${line}${1}"; ln="1"
+  elif [ "$1" = ")" ]; then
+    line="${line})"; wait=""
+  elif [ "$ln" ]; then
+    line="${line}
+${1}"; ln=""
+  fi
+  [ ! "$wait" ] && {
+    parse "${line:-$1}"; line=""
+  }
+}
+parse(){ # parse is fed a line, and returns it translated to sh
+case "${1}" in
+  ''|'#'!*brsh) ;; # ignore somethings
+  "printf('"*"')")
+    set -f; IFS="'"; set -- $1; IFS=""; 
+    out="${*##*printf(}"; out="${out%)}"
+    printf "printf '$out\n'"
+    set +f
+  ;;
+  printf'('*')')
+    out="${1##*printf(}"; out="${out%)}"
+    printf 'printf "%s"' "$out\\\n"
+    echo
+  ;;
+  *) printf '%s\n' "${1%%#*}" ;; # remove comments by default
+esac
+}
+case "$1" in
+  --[Hh]elp|-[Hh]|'?'|"")
+    usage;;
+  *)
+    [ -e "$1" ] && {
+      rsh=$(while read -r p || [ -n "$p" ]; do
+        pparse "$p"
+      done<${1})
+    :;} || {
+      [ "$1" = "-" ] && rsh=$(while read -r p || [ -n "$p" ]; do
+        IFS=""; pparse "$p"
+      done<&0)
+    }
+esac
+#echo "$rsh" # - for debugging
+printf '%s\n' "$rsh" | sh -

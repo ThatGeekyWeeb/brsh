@@ -1,0 +1,7 @@
+#!./brsh
+printf(
+  'literal $1'
+)
+
+printf(without new lines)
+printf 'classic printf also works\n'
